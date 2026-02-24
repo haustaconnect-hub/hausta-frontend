@@ -1,0 +1,201 @@
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 96%;
+    --foreground: 160 20% 22%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 20% 22%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 20% 22%;
+    --primary: 160 20% 22%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 155 18% 47%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 91%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 155 35% 75%;
+    --accent-foreground: 160 20% 22%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 155 35% 75%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 160 20% 22%;
+    --sidebar-primary: 160 20% 22%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 155 35% 75%;
+    --sidebar-accent-foreground: 160 20% 22%;
+    --sidebar-border: 0 0% 91%;
+    --sidebar-ring: 155 35% 75%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-hausta-light text-foreground font-body antialiased;
+    font-family: 'Avenir', system-ui, -apple-system, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'League Spartan', sans-serif;
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .glass {
+    @apply bg-white/80 backdrop-blur-xl border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-hausta-dark/80 backdrop-blur-xl border border-white/10;
+  }
+  
+  .gradient-primary {
+    background: linear-gradient(135deg, #2c433e 0%, #628f7f 100%);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, #a8d8c8 0%, #628f7f 100%);
+  }
+  
+  .shadow-soft {
+    box-shadow: 0 4px 20px -4px rgba(44, 67, 62, 0.15);
+  }
+  
+  .shadow-hover {
+    box-shadow: 0 8px 30px -4px rgba(44, 67, 62, 0.25);
+  }
+  
+  .custom-expo {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .fluid-bounce {
+    transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #628f7f;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2c433e;
+}
+
+/* Animation keyframes */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 5s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+/* Swipe card styles */
+.swipe-card {
+  @apply absolute w-full h-full rounded-2xl overflow-hidden shadow-soft;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Hide scrollbar for swipe containers */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
