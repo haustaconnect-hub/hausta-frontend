@@ -178,6 +178,7 @@ interface AppState {
   updateUser: (data: any) => void;
   
   // Property Actions
+  fetchHousemates: (params?: any) => Promise<void>;
   fetchProperties: (params?: any) => Promise<void>;
   fetchMyProperties: () => Promise<void>;
   createProperty: (data: any) => Promise<any>;
@@ -429,6 +430,17 @@ export const useStore = create<AppState>()(
         } catch (error: any) {
           set({ error: error.response?.data?.message, isLoading: false });
           throw error;
+        }
+      },
+      
+      // Housemate Actions
+      fetchHousemates: async (params = {}) => {
+        set({ isLoading: true });
+        try {
+          const response = await userAPI.getStudents(params);
+          set({ housemates: response.data.users, isLoading: false });
+        } catch (error: any) {
+          set({ error: error.response?.data?.message, isLoading: false });
         }
       },
       
