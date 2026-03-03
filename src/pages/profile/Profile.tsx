@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -451,10 +451,12 @@ function ListPropertyModal({ onClose }: { onClose: () => void }) {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user, logout, quizAnswers } = useStore();
+  const { user, logout, quizAnswers, updateProfile, updateUser } = useStore();
   const [isEditing, setIsEditing] = useState(false);
   const [activeSection, setActiveSection] = useState<'profile' | 'contract' | 'preferences' | 'settings'>('profile');
   const [showListProperty, setShowListProperty] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogout = () => {
     logout();
@@ -463,41 +465,143 @@ export default function Profile() {
 
   const isStudent = user?.role === 'student';
 
-  const renderProfileContent = () => (
-    <div className="space-y-6">
-      {/* Profile Header */}
-      <div className="bg-white rounded-2xl p-6 shadow-soft">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-hausta-accent/30 flex items-center justify-center overflow-hidden">
-              {isStudent && (user as any).avatar ? (
-                <img src={(user as any).avatar} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-12 h-12 text-hausta-dark" />
-              )}
+    // Edit Profile Form Component
+  function EditProfileForm({ onCancel }: { onCancel: () => void }) {
+    const [formData, setFormData] = useState({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      phone: (user as any)?.phone || '',
+      bio: (user as any)?.bio || '',
+      university: (user as any)?.university || '',
+      preferredLocation: (user as any)?.preferredLocation || '',
+      budgetMin: (user as any)?.budgetMin || 400,
+      budgetMax: (user as any)?.budgetMax || 800,
+      companyName: (user as any)?.companyName || '',
+    });
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleChange = (field: string, value: any) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleSave = async () => {
+      setIsSaving(true);
+      try {
+        await updateProfile(formData);
+        updateUser(formData);
+        onCancel();
+      } catch (error) {
+        console.error('Error updating profile:', error);
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-soft space-y-4">
+        <h3 className="text-lg font-heading font-semibold text-hausta-dark mb-4">Edit Profile</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">First Name</label>
+            <input type="text" value={formData.firstName} onChange={(e) => handleChange('firstName', e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-hausta-green focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Last Name</label>
+            <input type="text" value={formData.lastName} onChange={(e) => handleChange('lastName', e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-hausta-green focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Phone</label>
+          <input type="tel" value={formData.phone} onChange={(e) => handleChange('phone', e.target.value)} placeholder="+44 123 456 7890" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-hausta-green focus:outline-none" />
+        </div>
+
+        {isStudent ? (
+          <>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">University</label>
+              <input type="text" value={formData.university} onChange={(e) => handleChange('university', e.target.value)} placeholder="e.g. University of Manchester" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-hausta-green focus:outline-none" />
             </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-hausta-dark rounded-full flex items-center justify-center">
-              <Camera className="w-4 h-4 text-white" />
-            </button>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Preferred Location</label>
+              <input type="text" value={formData.preferredLocation} onChange={(e) => handleChange('preferredLocation', e.target.value)} placeholder="e.g. City Centre" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-hausta-green focus:outline-none" />
+            </div>
+          </>
+        ) : (
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Company Name</label>
+            <input type="text" value={formData.companyName} onChange={(e) => handleChange('companyName', e.target.value)} placeholder="Your company name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-hausta-green focus:outline-none" />
           </div>
-          <div className="flex-1">
-            <h2 className="text-xl font-heading font-bold text-hausta-dark">
-              {user?.firstName} {user?.lastName}
-            </h2>
-            <p className="text-gray-500">{user?.email}</p>
-            <span className="inline-block mt-2 px-3 py-1 bg-hausta-accent/30 rounded-full text-xs font-medium text-hausta-dark capitalize">
-              {user?.role === 'student' ? 'Student Renter' : 'Property Lister'}
-            </span>
-          </div>
-          <button 
-            onClick={() => setIsEditing(!isEditing)}
-            className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-          >
-            <Edit2 className="w-5 h-5 text-gray-600" />
-          </button>
+        )}
+
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Bio</label>
+          <textarea value={formData.bio} onChange={(e) => handleChange('bio', e.target.value)} placeholder="Tell others about yourself..." rows={3} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-hausta-green focus:outline-none resize-none" />
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button onClick={onCancel} className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50">Cancel</button>
+          <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3 bg-hausta-dark text-white rounded-xl hover:bg-hausta-green disabled:opacity-50">{isSaving ? 'Saving...' : 'Save Changes'}</button>
         </div>
       </div>
+    );
+  }
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const { userAPI } = await import('@/services/api');
+      const response = await userAPI.uploadAvatar(formData);
+      updateUser({ avatar: response.data.avatarUrl });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const renderProfileContent = () => (
+    <div className="space-y-6">
+      {isEditing ? (
+        <EditProfileForm onCancel={() => setIsEditing(false)} />
+      ) : (
+        <div className="bg-white rounded-2xl p-6 shadow-soft">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-hausta-accent/30 flex items-center justify-center overflow-hidden">
+                {(user as any)?.avatar ? (
+                  <img src={(user as any).avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-12 h-12 text-hausta-dark" />
+                )}
+              </div>
+              <button onClick={handleAvatarClick} disabled={isUploading} className="absolute bottom-0 right-0 w-8 h-8 bg-hausta-dark rounded-full flex items-center justify-center hover:bg-hausta-green disabled:opacity-50">
+                {isUploading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Camera className="w-4 h-4 text-white" />}
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-heading font-bold text-hausta-dark">{user?.firstName} {user?.lastName}</h2>
+              <p className="text-gray-500">{user?.email}</p>
+              <span className="inline-block mt-2 px-3 py-1 bg-hausta-accent/30 rounded-full text-xs font-medium text-hausta-dark capitalize">{user?.role === 'student' ? 'Student Renter' : 'Property Lister'}</span>
+            </div>
+            <button onClick={() => setIsEditing(true)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+              <Edit2 className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+        </div>
+      )}
+  
       {/* Student-specific info */}
       {isStudent && (
         <>
