@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/store/useStore';
-import { mockProperties, mockStudents } from '@/data/mockData';
 import BottomNav from '@/components/BottomNav';
 import type { Property, StudentProfile } from '@/types';
 
@@ -544,6 +543,10 @@ export default function StudentDashboard() {
     setActiveTab,
     currentCardIndex,
     setCurrentCardIndex,
+    properties,
+    housemates,
+    fetchProperties,
+    fetchHousemates,
     likeProperty,
     saveProperty,
     skipProperty,
@@ -554,12 +557,28 @@ export default function StudentDashboard() {
   const [showFilter, setShowFilter] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | 'up' | null>(null);
   const [selectedItem, setSelectedItem] = useState<{ data: Property | StudentProfile; type: 'property' | 'housemate' } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const properties = mockProperties;
-  const housemates = mockStudents.filter(s => s.id !== user?.id);
+  // Fetch real data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchProperties();
+        await fetchHousemates();
+      } catch (error) {
+        console.error('Error loading swipe data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, [fetchProperties, fetchHousemates]);
 
-  const currentItems = activeTab === 'properties' ? properties : housemates;
-  const currentItem = currentItems[currentCardIndex];
+  // Filter out current user from housemates
+  const filteredHousemates = housemates.filter((s: any) => s.id !== user?.id);
+  
+  const currentItems = activeTab === 'properties' ? properties : filteredHousemates;
 
   const handleSwipe = (direction: 'left' | 'right' | 'up') => {
     setSwipeDirection(direction);
@@ -583,6 +602,16 @@ export default function StudentDashboard() {
     else handleSwipe('right');
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-hausta-light flex flex-col items-center justify-center pb-20">
+        <div className="w-12 h-12 border-4 border-hausta-dark border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-gray-600">Loading {activeTab === 'properties' ? 'properties' : 'housemates'}...</p>
+      </div>
+    );
+  }
+  
   // Empty state
   if (currentCardIndex >= currentItems.length) {
     return (
@@ -629,7 +658,7 @@ export default function StudentDashboard() {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                Housemates ({housemates.length})
+                Housemates ({filteredHousemates.length})
               </button>
               <button
                 onClick={() => navigate('/groups')}
@@ -721,7 +750,7 @@ export default function StudentDashboard() {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Housemates ({housemates.length})
+              Housemates ({filteredHousemates.length})
             </button>
             <button
               onClick={() => navigate('/groups')}
